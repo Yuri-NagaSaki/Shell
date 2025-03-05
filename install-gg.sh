@@ -76,7 +76,7 @@ download_and_install() {
 
   temp_file=$(mktemp /tmp/gg.XXXXXXXXX)
   trap "rm -f '$temp_file'" exit
-  curl -L "https://gh-proxy.catcat.blog/github.com/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o "${temp_file}"
+  curl -L "https://gh-proxy.sakiko.de/github.com/mzz2017/gg/releases/latest/download/gg-${PLATFORM}-${ARCH}" -o "${temp_file}"
   all_user_access=0
   touch /usr/local/bin/gg > /dev/null 2>&1 && all_user_access=1
   if [ "$all_user_access" = 1 ]; then
