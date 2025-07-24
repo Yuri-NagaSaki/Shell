@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # set up rust_serverstatus and 
 
