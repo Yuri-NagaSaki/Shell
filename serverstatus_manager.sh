@@ -497,10 +497,10 @@ install_requirements() {
     apt-get update
     
     # 安装必要工具
-    apt-get install -y nano curl wget
+    apt-get install -y nano curl wget bc 
     
     # 检查安装结果
-    local tools=("nano" "curl" "wget")
+    local tools=("nano" "curl" "wget" "bc")
     local all_installed=true
     
     for tool in "${tools[@]}"; do
@@ -516,6 +516,7 @@ install_requirements() {
         echo -e "1. nano  - 文本编辑器"
         echo -e "2. curl  - 文件传输工具"
         echo -e "3. wget  - 网络下载工具"
+        echo -e "4. bc    - 命令行计算器"
     else
         echo -e "${RED}部分工具安装失败，请检查系统环境后重试${NC}"
     fi
