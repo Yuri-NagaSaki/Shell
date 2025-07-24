@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # set up rust_serverstatus and 
 
@@ -37,7 +38,7 @@ tag=$(curl -m 10 -sL "https://api.github.com/repos/$github_project/releases/late
 
 
 # step 1: 下载和解压客户端
-curl -L -O https://gh-proxy.sakiko.de/github.com/zdz/ServerStatus-Rust/releases/download/${tag}/client-${OS_ARCH}-unknown-linux-musl.zip
+curl -L -O https://github.com/zdz/ServerStatus-Rust/releases/download/${tag}/client-${OS_ARCH}-unknown-linux-musl.zip
 unzip -o "client-${OS_ARCH}-unknown-linux-musl.zip"
 rm "client-${OS_ARCH}-unknown-linux-musl.zip"
 
@@ -75,7 +76,7 @@ if [[ -z ${install_server_or_not} ]]; then
 fi
 
 # 下载和解压服务端
-curl -L -O https://gh-proxy.sakiko.de/github.com/zdz/ServerStatus-Rust/releases/download/${tag}/server-${OS_ARCH}-unknown-linux-musl.zip
+curl -L -O https://github.com/zdz/ServerStatus-Rust/releases/download/${tag}/server-${OS_ARCH}-unknown-linux-musl.zip
 unzip -o "server-${OS_ARCH}-unknown-linux-musl.zip"
 rm "server-${OS_ARCH}-unknown-linux-musl.zip"
 
