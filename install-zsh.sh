@@ -1,93 +1,97 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# 自动安装 zsh + oh-my-zsh + 常用插件，并设置为默认 shell
 
-# Script to install and configure zsh with Oh My Zsh on Ubuntu/Debian
-# Author: Created based on user requirements
-# Date: April 7, 2025
-
-# Exit on error
 set -e
 
-echo "==== Starting ZSH Installation and Configuration ===="
-
-# Check if running as root and warn user
-if [ "$(id -u)" = 0 ]; then
-    echo "WARNING: You are running this script as root. It's recommended to run it as a regular user with sudo privileges."
-    read -p "Continue as root? (y/n): " choice
-    if [ "$choice" != "y" ]; then
+echo "==== Installing zsh ===="
+if ! command -v zsh >/dev/null 2>&1; then
+    if command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get update && sudo apt-get install -y zsh git curl
+    elif command -v yum >/dev/null 2>&1; then
+        sudo yum install -y zsh git curl
+    else
+        echo "Unsupported package manager. Please install zsh manually."
         exit 1
     fi
-fi
-
-echo "==== Updating system packages ===="
-apt update && sudo apt upgrade -y
-
-echo "==== Installing required packages ===="
-apt install zsh git curl vim fzf duf sudo -y
-
-# Backup existing .zshrc if it exists
-if [ -f "$HOME/.zshrc" ]; then
-    echo "==== Backing up existing .zshrc ===="
-    cp "$HOME/.zshrc" "$HOME/.zshrc.backup.$(date +%Y%m%d%H%M%S)"
-fi
-
-# Check if Oh My Zsh is already installed
-if [ -d "$HOME/.oh-my-zsh" ]; then
-    echo "==== Oh My Zsh is already installed, skipping installation ===="
 else
-    echo "==== Installing Oh My Zsh ===="
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    echo "zsh already installed."
 fi
 
-# Install plugins
+echo "==== Installing oh-my-zsh ===="
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    RUNZSH=no KEEP_ZSHRC=yes \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+    echo "oh-my-zsh already installed."
+fi
+
 echo "==== Installing zsh plugins ===="
-# Check if zsh-autosuggestions is already installed
-if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions" ]; then
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
+
+# zsh-autosuggestions
+if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
 else
-    echo "zsh-autosuggestions is already installed"
+    echo "zsh-autosuggestions already installed."
 fi
 
-# Check if zsh-syntax-highlighting is already installed
-if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting" ]; then
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+# zsh-syntax-highlighting
+if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting
 else
-    echo "zsh-syntax-highlighting is already installed"
+    echo "zsh-syntax-highlighting already installed."
 fi
 
-# Install custom theme
-echo "==== Installing haoomz theme ===="
-wget -O ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/haoomz.zsh-theme https://cdn.haoyep.com/gh/leegical/Blog_img/zsh/haoomz.zsh-theme
+echo "==== Configuring .zshrc ===="
+if [ -f "$HOME/.zshrc" ]; then
+    cp "$HOME/.zshrc" "$HOME/.zshrc.backup.$(date +%s)"
+    echo "Backed up existing .zshrc"
+fi
 
-# Create .zshrc with the specific configuration
-echo "==== Creating .zshrc configuration ===="
 cat > "$HOME/.zshrc" << 'EOF'
 export ZSH="$HOME/.oh-my-zsh"
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="haoomz"
-plugins=(git z zsh-autosuggestions fzf zsh-syntax-highlighting extract)
+ZSH_THEME="robbyrussell"
+
+plugins=(
+  git
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
+
 source $ZSH/oh-my-zsh.sh
-export LANG=en_US.UTF-8
-export LANGUAGE="en_US"
-export LC_ALL=en_US.UTF-8
-export LS_OPTIONS='--color=auto'
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
-alias vi="vim"
+
+# 自定义别名
+alias ll='ls -lah --color=auto'
+alias gs='git status'
+alias gp='git pull'
+alias ..='cd ..'
+alias ...='cd ../..'
 EOF
 
-echo "==== Configuration complete! ===="
-echo "To use zsh now, run: source ~/.zshrc"
-echo "To make zsh your default shell, run: chsh -s $(which zsh)"
+echo "==== .zshrc configured successfully ===="
 
-# Prompt user if they want to switch to zsh now
-read -p "Do you want to switch to zsh now? (y/n): " switch_now
-if [ "$switch_now" = "y" ]; then
-    echo "Switching to zsh..."
-    exec zsh -l
+# ==============================
+# 设置默认 shell 为 zsh
+# ==============================
+echo "==== Setting zsh as the default shell ===="
+
+CURRENT_SHELL=$(getent passwd $USER | cut -d: -f7)
+ZSH_PATH=$(which zsh)
+
+if [ "$CURRENT_SHELL" != "$ZSH_PATH" ]; then
+    if chsh -s "$ZSH_PATH"; then
+        echo "✅ Default shell changed to zsh."
+        echo "⚠️ 请注销并重新登录后生效。"
+    else
+        echo "❌ Failed to change default shell. 请手动运行:"
+        echo "   sudo chsh -s $(which zsh) $(whoami)"
+    fi
 else
-    echo "You can switch to zsh later by running: exec zsh"
+    echo "ℹ️ 已经是 zsh，无需修改。"
 fi
+
+echo "==== All done! ===="
+
+# 直接进入 zsh 会话
+exec zsh -l
+
