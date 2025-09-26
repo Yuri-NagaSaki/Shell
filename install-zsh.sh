@@ -5,15 +5,15 @@ set -e
 echo "==== Installing zsh and dependencies ===="
 if ! command -v zsh >/dev/null 2>&1; then
     if command -v apt-get >/dev/null 2>&1; then
-        sudo apt-get update && sudo apt-get install -y zsh git curl wget fzf
+        sudo apt-get update && sudo apt-get install -y zsh git curl wget
     elif command -v yum >/dev/null 2>&1; then
-        sudo yum install -y zsh git curl wget fzf
+        sudo yum install -y zsh git curl wget
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y zsh git curl wget fzf
+        sudo dnf install -y zsh git curl wget
     elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -S --noconfirm zsh git curl wget fzf
+        sudo pacman -S --noconfirm zsh git curl wget
     else
-        echo "Unsupported package manager. Please install zsh, git, curl, wget, fzf manually."
+        echo "Unsupported package manager. Please install zsh, git, curl, wget manually."
         exit 1
     fi
 else
@@ -79,52 +79,6 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
-# fzf 配置
-if command -v fzf >/dev/null 2>&1; then
-    # 检测 fzf 安装路径并设置 FZF_BASE
-    if [ -d "/usr/share/fzf" ]; then
-        # Ubuntu/Debian 系统的 fzf 路径
-        export FZF_BASE="/usr/share/fzf"
-    elif [ -d "/usr/share/doc/fzf" ]; then
-        # 某些 Debian 系统的路径
-        export FZF_BASE="/usr/share/doc/fzf"
-    elif [ -d "/opt/homebrew/opt/fzf" ]; then
-        # macOS Homebrew ARM 路径
-        export FZF_BASE="/opt/homebrew/opt/fzf"
-    elif [ -d "/usr/local/opt/fzf" ]; then
-        # macOS Homebrew Intel 路径
-        export FZF_BASE="/usr/local/opt/fzf"
-    elif [ -d "$HOME/.fzf" ]; then
-        # 手动安装到用户目录
-        export FZF_BASE="$HOME/.fzf"
-    elif [ -d "/usr/share/fzf-git" ]; then
-        # Arch Linux 路径
-        export FZF_BASE="/usr/share/fzf-git"
-    fi
-    
-    # 使用 fd 作为默认搜索命令（如果可用）
-    if command -v fd >/dev/null 2>&1; then
-        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
-        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-    fi
-    
-    # 手动加载 fzf 的快捷键和补全
-    if [ -f "$FZF_BASE/shell/completion.zsh" ]; then
-        source "$FZF_BASE/shell/completion.zsh"
-    fi
-    if [ -f "$FZF_BASE/shell/key-bindings.zsh" ]; then
-        source "$FZF_BASE/shell/key-bindings.zsh"
-    fi
-    
-    # 备用方案：如果系统安装了 fzf，尝试加载标准路径
-    [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-    [ -f /usr/share/fzf/shell/key-bindings.zsh ] && source /usr/share/fzf/shell/key-bindings.zsh
-    [ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
-    
-    # 设置 fzf 颜色主题
-    export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
-fi
-
 # zsh-autosuggestions 配置
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#666666"
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
@@ -166,15 +120,10 @@ mcd() {
     mkdir -p "$1" && cd "$1"
 }
 
-# 快速搜索历史命令
-fh() {
-    print -z $( ([ -n "$ZSH_NAME" ] && fc -l 1 || history) | fzf +s --tac | sed 's/ *[0-9]* *//')
-}
-
 # 快速进入目录
-fd() {
+cdd() {
     local dir
-    dir=$(find ${1:-.} -path '*/\.*' -prune -o -type d -print 2> /dev/null | fzf +m) &&
+    dir=$(find ${1:-.} -path '*/\.*' -prune -o -type d -print 2> /dev/null | head -20) &&
     cd "$dir"
 }
 
@@ -217,11 +166,9 @@ echo ""
 echo "🔧 额外功能："
 echo "   - 优化的历史记录配置"
 echo "   - 实用的别名和函数"
-echo "   - fzf 快捷键集成"
 echo ""
 echo "📝 使用说明："
-echo "   - fh: 模糊搜索历史命令"
-echo "   - fd: 模糊搜索并进入目录"
+echo "   - cdd <dir>: 查找并进入目录"
 echo "   - mcd <dir>: 创建并进入目录"
 echo "   - extract <file>: 解压各种格式的压缩文件"
 echo ""
