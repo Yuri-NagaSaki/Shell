@@ -74,7 +74,6 @@ plugins=(
   z
   zsh-autosuggestions
   zsh-syntax-highlighting
-  fzf
   extract
 )
 
@@ -82,14 +81,45 @@ source $ZSH/oh-my-zsh.sh
 
 # fzf 配置
 if command -v fzf >/dev/null 2>&1; then
+    # 检测 fzf 安装路径并设置 FZF_BASE
+    if [ -d "/usr/share/fzf" ]; then
+        # Ubuntu/Debian 系统的 fzf 路径
+        export FZF_BASE="/usr/share/fzf"
+    elif [ -d "/usr/share/doc/fzf" ]; then
+        # 某些 Debian 系统的路径
+        export FZF_BASE="/usr/share/doc/fzf"
+    elif [ -d "/opt/homebrew/opt/fzf" ]; then
+        # macOS Homebrew ARM 路径
+        export FZF_BASE="/opt/homebrew/opt/fzf"
+    elif [ -d "/usr/local/opt/fzf" ]; then
+        # macOS Homebrew Intel 路径
+        export FZF_BASE="/usr/local/opt/fzf"
+    elif [ -d "$HOME/.fzf" ]; then
+        # 手动安装到用户目录
+        export FZF_BASE="$HOME/.fzf"
+    elif [ -d "/usr/share/fzf-git" ]; then
+        # Arch Linux 路径
+        export FZF_BASE="/usr/share/fzf-git"
+    fi
+    
     # 使用 fd 作为默认搜索命令（如果可用）
     if command -v fd >/dev/null 2>&1; then
         export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
         export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
     fi
     
-    # fzf 快捷键和补全
+    # 手动加载 fzf 的快捷键和补全
+    if [ -f "$FZF_BASE/shell/completion.zsh" ]; then
+        source "$FZF_BASE/shell/completion.zsh"
+    fi
+    if [ -f "$FZF_BASE/shell/key-bindings.zsh" ]; then
+        source "$FZF_BASE/shell/key-bindings.zsh"
+    fi
+    
+    # 备用方案：如果系统安装了 fzf，尝试加载标准路径
     [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+    [ -f /usr/share/fzf/shell/key-bindings.zsh ] && source /usr/share/fzf/shell/key-bindings.zsh
+    [ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
     
     # 设置 fzf 颜色主题
     export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
